@@ -2,13 +2,29 @@
 <html>
 <head>
     <title>Policy Impact Visualizer</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2rem; }
+        .card { border: 1px solid #ddd; padding: 1rem; margin: 1rem 0; border-radius: 5px; }
+    </style>
 </head>
 <body>
-    <h1>Welcome to Policy Impact Visualizer</h1>
-    <p>API is working! Next steps:</p>
-    <ul>
-        <li><a href="/admin/">Admin Panel</a></li>
-        <li><a href="/api/schemes/">Schemes API</a></li>
-    </ul>
+    <h1>Policy Impact Visualizer</h1>
+    
+    <div class="card">
+        <h2>Available Endpoints</h2>
+        <ul>
+            <li><a href="/api/schemes/">/api/schemes/</a> - List all schemes</li>
+            <li><a href="/admin/">/admin/</a> - Admin panel</li>
+        </ul>
+    </div>
+    
+    <div class="card">
+        <h2>Next Steps</h2>
+        <ol>
+            <li>Create superuser: <code>python manage.py createsuperuser</code></li>
+            <li>Add data via admin panel</li>
+            <li>Implement visualizations</li>
+        </ol>
+    </div>
 </body>
 </html>
