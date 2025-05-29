@@ -2,29 +2,128 @@
 <html>
 <head>
     <title>Policy Impact Visualizer</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; margin: 2rem; }
-        .card { border: 1px solid #ddd; padding: 1rem; margin: 1rem 0; border-radius: 5px; }
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .dashboard { display: flex; flex-wrap: wrap; gap: 20px; }
+        .card { border: 1px solid #ddd; padding: 20px; border-radius: 5px; width: 45%; min-width: 300px; }
+        select { padding: 8px; margin-bottom: 15px; width: 100%; }
     </style>
 </head>
 <body>
     <h1>Policy Impact Visualizer</h1>
     
-    <div class="card">
-        <h2>Available Endpoints</h2>
-        <ul>
-            <li><a href="/api/schemes/">/api/schemes/</a> - List all schemes</li>
-            <li><a href="/admin/">/admin/</a> - Admin panel</li>
-        </ul>
+    <div class="dashboard">
+        <div class="card">
+            <h2>All Schemes Data</h2>
+            <canvas id="allSchemesChart"></canvas>
+        </div>
+        
+        <div class="card">
+            <h2>State-wise Impact</h2>
+            <select id="stateSelector">
+                <option value="">Loading states...</option>
+            </select>
+            <canvas id="stateChart"></canvas>
+        </div>
     </div>
-    
-    <div class="card">
-        <h2>Next Steps</h2>
-        <ol>
-            <li>Create superuser: <code>python manage.py createsuperuser</code></li>
-            <li>Add data via admin panel</li>
-            <li>Implement visualizations</li>
-        </ol>
-    </div>
+
+    <script>
+        // Global chart references
+        let allSchemesChart = null;
+        let stateChart = null;
+        
+        // Load states and initialize visualizations
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. Load states dropdown
+            fetch('/api/states/')
+                .then(response => response.json())
+                .then(states => {
+                    const selector = document.getElementById('stateSelector');
+                    selector.innerHTML = '';
+                    
+                    // Add default option
+                    const defaultOption = document.createElement('option');
+                    defaultOption.value = '';
+                    defaultOption.textContent = 'Select a state';
+                    selector.appendChild(defaultOption);
+                    
+                    // Add states
+                    states.forEach(state => {
+                        const option = document.createElement('option');
+                        option.value = state.code;
+                        option.textContent = state.name;
+                        selector.appendChild(option);
+                    });
+                    
+                    // Set up event listener
+                    selector.addEventListener('change', updateStateChart);
+                });
+            
+            // 2. Load all schemes chart
+            fetch('/api/schemes/')
+                .then(response => response.json())
+                .then(data => {
+                    if (allSchemesChart) allSchemesChart.destroy();
+                    
+                    allSchemesChart = new Chart(
+                        document.getElementById('allSchemesChart'),
+                        {
+                            type: 'bar',
+                            data: {
+                                labels: data.map(d => `${d.scheme__name} (${d.state__code})`),
+                                datasets: [{
+                                    label: 'Beneficiaries',
+                                    data: data.map(d => d.beneficiaries),
+                                    backgroundColor: '#36a2eb'
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                scales: {
+                                    y: { beginAtZero: true }
+                                }
+                            }
+                        }
+                    );
+                });
+        });
+        
+        // Update state chart when selection changes
+        function updateStateChart() {
+            const selector = document.getElementById('stateSelector');
+            const stateCode = selector.value;
+            const stateName = selector.options[selector.selectedIndex].text;
+            
+            if (!stateCode) return;
+            
+            fetch(`/api/state/${stateCode}/`)
+                .then(response => response.json())
+                .then(data => {
+                    if (stateChart) stateChart.destroy();
+                    
+                    stateChart = new Chart(
+                        document.getElementById('stateChart'),
+                        {
+                            type: 'bar',
+                            data: {
+                                labels: data.map(d => d.scheme__name),
+                                datasets: [{
+                                    label: `Beneficiaries in ${stateName}`,
+                                    data: data.map(d => d.beneficiaries),
+                                    backgroundColor: '#ff6384'
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                scales: {
+                                    y: { beginAtZero: true }
+                                }
+                            }
+                        }
+                    );
+                });
+        }
+    </script>
 </body>
 </html>
