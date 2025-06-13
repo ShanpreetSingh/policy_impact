@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Policy Impact Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { 
+            margin: 0; 
+            padding: 0; 
+            font-family: 'Poppins', sans-serif;
+        }
+        #map { 
+            height: 100vh; 
+            width: 100%; 
+        }
+        .map-header {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            background: rgba(255,255,255,0.9);
+            padding: 10px 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+        .info {
+            padding: 6px 8px;
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+        }
+        .legend {
+            line-height: 18px;
+            color: #555;
+        }
+        .legend i {
+            width: 18px;
+            height: 18px;
+            float: left;
+            margin-right: 8px;
+            opacity: 0.7;
+            border-radius: 3px;
+        }
+        .back-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            background: #4361ee;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            text-decoration: none;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+        .back-button:hover {
+            background: #3a0ca3;
+            transform: translateY(-2px);
+        }
+        .state-label {
+            font-weight: bold;
+            color: #333;
+            text-shadow: 1px 1px 2px white;
+            background: rgba(255,255,255,0.7);
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        .circle-marker {
+            stroke: #fff;
+            stroke-width: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="map-header">
+        <h2><i class="fas fa-map-marked-alt"></i> Policy Impact by State</h2>
+        <p>Larger and darker circles indicate higher beneficiary counts</p>
+    </div>
+    <a href="/" class="back-button">
+        <i class="fas fa-arrow-left"></i> Back to Dashboard
+    </a>
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Initialize map centered on India
+        const map = L.map('map').setView([20.5937, 78.9629], 5);
+        
+        // Add base tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        }).addTo(map);
+
+   function getColor(beneficiaries) {
+    return beneficiaries > 1000000 ? '#0d0887' :  // Dark purple
+           beneficiaries > 500000  ? '#6a00a8' :  // Purple
+           beneficiaries > 100000  ? '#b12a90' :  // Magenta
+           beneficiaries > 50000   ? '#e16462' :  // Coral
+           beneficiaries > 10000   ? '#fca636' :  // Orange
+           beneficiaries > 1000    ? '#f0f921' :  // Yellow
+           beneficiaries > 0       ? '#d2fbd4' :  // Light green
+                                     '#f0f0f0';   // Light gray (no beneficiaries)
+}
+
+        // Add legend
+        const legend = L.control({position: 'bottomright'});
+        legend.onAdd = function(map) {
+            const div = L.DomUtil.create('div', 'info legend');
+            const grades = [0, 1000, 10000, 50000, 100000, 500000, 1000000];
+            const labels = [];
+            
+            div.innerHTML = '<h4>Beneficiaries</h4>';
+            
+            for (let i = 0; i < grades.length; i++) {
+                div.innerHTML +=
+                    '<i style="background:' + getColor(grades[i] + 1) + '"></i> ' +
+                    grades[i].toLocaleString() + 
+                    (grades[i + 1] ? '&ndash;' + grades[i + 1].toLocaleString() + '<br>' : '+');
+            }
+            
+            return div;
+        };
+        legend.addTo(map);
+
+        // Fetch data and create map layers
+        fetch('/api/state-geo-data/')  
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.json();
+            })
+            .then(data => {
+                // Create a feature group to hold our state markers
+                const stateMarkers = L.featureGroup().addTo(map);
+                const bounds = [];
+                
+                data.features.forEach(feature => {
+                    const beneficiaries = feature.properties.beneficiaries || 0;
+                    const latlng = [
+                        feature.geometry.coordinates[1], 
+                        feature.geometry.coordinates[0]
+                    ];
+                    
+                    // Create circle marker with size based on beneficiaries
+                    const marker = L.circleMarker(latlng, {
+                        radius: Math.min(20, Math.max(5, Math.sqrt(beneficiaries) / 50)),
+                        fillColor: getColor(beneficiaries),
+                        color: '#fff',
+                        weight: 1,
+                        opacity: 1,
+                        fillOpacity: 0.8,
+                        className: 'circle-marker'
+                    }).addTo(stateMarkers);
+                    
+                    bounds.push(latlng);
+                    
+                    // Add state label
+                    L.marker(latlng, {
+                        icon: L.divIcon({
+                            className: 'state-label',
+                            html: feature.properties.code,
+                            iconSize: [30, 20]
+                        }),
+                        zIndexOffset: 1000
+                    }).addTo(map);
+                    
+                    // Add popup with detailed information
+                    marker.bindPopup(`
+                        <div style="min-width: 200px">
+                            <h3 style="margin-top:0;color:#4361ee">${feature.properties.name}</h3>
+                            <p><strong>Total Beneficiaries:</strong> ${beneficiaries.toLocaleString()}</p>
+                            <p><strong>Active Schemes:</strong> ${feature.properties.schemes_count}</p>
+                            <div style="text-align:center;margin-top:10px">
+                                <a href="/api/state/${feature.properties.code}" 
+                                   style="background:#4361ee;color:white;padding:5px 10px;border-radius:4px;text-decoration:none">
+                                    View Details
+                                </a>
+                            </div>
+                        </div>
+                    `);
+                    
+                    // Highlight on hover
+                    marker.on({
+                        mouseover: function(e) {
+                            this.setStyle({
+                                weight: 2,
+                                color: '#333',
+                                fillOpacity: 0.9
+                            });
+                            this.bringToFront();
+                        },
+                        mouseout: function(e) {
+                            this.setStyle({
+                                weight: 1,
+                                color: '#fff',
+                                fillOpacity: 0.8
+                            });
+                        }
+                    });
+                });
+                
+                // Fit map to show all states
+                if (bounds.length > 0) {
+                    map.fitBounds(bounds);
+                }
+            })
+            .catch(error => {
+                console.error('Error loading state data:', error);
+                // Fallback message if API fails
+                const errorMsg = L.control({position: 'topcenter'});
+                errorMsg.onAdd = function(map) {
+                    const div = L.DomUtil.create('div', 'info legend');
+                    div.innerHTML = '<p style="color:red;background:white;padding:5px 10px;border-radius:5px;">'
+                                 + '<i class="fas fa-exclamation-triangle"></i> Error loading data. Please try again later.'
+                                 + '</p>';
+                    return div;
+                };
+                errorMsg.addTo(map);
+            });
+    </script>
+</body>
+</html>

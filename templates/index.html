@@ -4,95 +4,196 @@
     <title>Policy Impact Visualizer</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Modern styling without changing layout structure */
+        /* Modern centered styling */
         body {
             font-family: 'Poppins', sans-serif;
-            background-color: #f5f7ff;
             margin: 0;
-            padding: 20px;
-            color: #333;
-        }
-        
-        h1 {
-            color: #4361ee;
-            margin-bottom: 5px;
+            padding: 0;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #b1beee 0%, #c8d2fb 100%);
             display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 10px;
         }
-        
+
+        .main-container {
+            width: 100%;
+            max-width: 1200px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+            width: 100%;
+        }
+
+        h1 {
+            color: #3a0ca3;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0 0 0.5rem 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            position: relative;
+        }
+
         h1 i {
-            font-size: 1.2em;
+            color: #4361ee;
+            font-size: 1.8rem;
+            animation: pulse 2s infinite;
         }
-        
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .subtitle {
+            color: #6c757d;
+            font-size: 1.1rem;
+            font-weight: 400;
+            max-width: 600px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .subtitle::after {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 3px;
+            background: linear-gradient(to right, #4361ee, #3a0ca3);
+            margin: 1rem auto 0;
+            border-radius: 3px;
+        }
+
         .dashboard {
             display: flex;
             flex-wrap: wrap;
-            gap: 20px;
-            margin-top: 20px;
+            justify-content: center;
+            gap: 2rem;
+            width: 100%;
         }
-        
+
         .card {
-            border: none;
-            padding: 20px;
-            border-radius: 10px;
-            width: 45%;
-            min-width: 300px;
             background: white;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            width: 100%;
+            max-width: 800px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-align: center;
         }
-        
+
         .card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
         }
-        
+
+        .card h2 {
+            color: #3a0ca3;
+            font-size: 1.5rem;
+            margin: 0 0 1.5rem 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card h2 i {
+            color: #4361ee;
+            font-size: 1.3rem;
+        }
+
         select {
-            padding: 10px;
-            margin-bottom: 15px;
+            padding: 12px 15px;
+            margin: 0 auto 1.5rem auto;
             width: 100%;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+            max-width: 400px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
             font-family: 'Poppins', sans-serif;
+            font-size: 0.95rem;
+            background-color: white;
+            display: block;
+            transition: all 0.3s ease;
         }
-        
+
         select:focus {
             outline: none;
             border-color: #4361ee;
-            box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.2);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
         }
-        
+
+        .chart-container {
+            width: 100%;
+            height: 300px;
+            margin: 0 auto;
+            position: relative;
+        }
+
         @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
             .card {
-                width: 100%;
+                padding: 1.5rem;
+            }
+            
+            .dashboard {
+                gap: 1.5rem;
             }
         }
     </style>
 </head>
 <body>
-    <h1><i class="fas fa-chart-line"></i> Policy Impact Visualizer</h1>
-    <p style="color: #666; margin-top: 0;">Visualizing government scheme impacts across Indian states</p>
-    
-    <div class="dashboard">
-        <div class="card">
-            <h2><i class="fas fa-chart-bar"></i> All Schemes Data</h2>
-            <canvas id="allSchemesChart"></canvas>
+    <div class="main-container">
+        <div class="header">
+            <h1><i class="fas fa-chart-line"></i> Policy Impact Visualizer</h1>
+            <p class="subtitle">Visualizing government scheme impacts across Indian states</p>
         </div>
         
-        <div class="card">
-            <h2><i class="fas fa-map-marked-alt"></i> State-wise Impact</h2>
-            <select id="stateSelector">
-                <option value="">Loading states...</option>
-            </select>
-            <canvas id="stateChart"></canvas>
+        <div class="dashboard">
+            <div class="card">
+                <h2><i class="fas fa-chart-bar"></i> All Schemes Data</h2>
+                <div class="chart-container">
+                    <canvas id="allSchemesChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2><i class="fas fa-map-marked-alt"></i> State-wise Impact</h2>
+                <select id="stateSelector">
+                    <option value="">Loading states...</option>
+                </select>
+                <div class="chart-container">
+                    <canvas id="stateChart"></canvas>
+                </div>
+            </div>
         </div>
+        <div style="text-align: center; margin: 30px 0;">
+    <a href="/map/" style="display: inline-block; padding: 12px 24px; 
+                          background: linear-gradient(135deg, #4361ee, #3a0ca3); 
+                          color: white; border-radius: 30px; text-decoration: none; 
+                          font-weight: 500; box-shadow: 0 4px 15px rgba(67, 97, 238, 0.3);
+                          transition: all 0.3s ease;">
+        <i class="fas fa-map-marked-alt"></i> View Geographic Distribution
+    </a>
+</div>
     </div>
 
     <script>
-        // EXACTLY THE SAME JAVASCRIPT CODE AS YOUR ORIGINAL
         // Global chart references
         let allSchemesChart = null;
         let stateChart = null;
@@ -139,13 +240,35 @@
                                 datasets: [{
                                     label: 'Beneficiaries',
                                     data: data.map(d => d.beneficiaries),
-                                    backgroundColor: '#36a2eb'
+                                    backgroundColor: '#4361ee',
+                                    borderRadius: 6
                                 }]
                             },
                             options: {
                                 responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: {
+                                        position: 'top',
+                                        align: 'center',
+                                        labels: {
+                                            boxWidth: 12,
+                                            padding: 20
+                                        }
+                                    }
+                                },
                                 scales: {
-                                    y: { beginAtZero: true }
+                                    y: { 
+                                        beginAtZero: true,
+                                        grid: {
+                                            drawBorder: false
+                                        }
+                                    },
+                                    x: {
+                                        grid: {
+                                            display: false
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -175,13 +298,35 @@
                                 datasets: [{
                                     label: `Beneficiaries in ${stateName}`,
                                     data: data.map(d => d.beneficiaries),
-                                    backgroundColor: '#ff6384'
+                                    backgroundColor: '#f72585',
+                                    borderRadius: 6
                                 }]
                             },
                             options: {
                                 responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: {
+                                        position: 'top',
+                                        align: 'center',
+                                        labels: {
+                                            boxWidth: 12,
+                                            padding: 20
+                                        }
+                                    }
+                                },
                                 scales: {
-                                    y: { beginAtZero: true }
+                                    y: { 
+                                        beginAtZero: true,
+                                        grid: {
+                                            drawBorder: false
+                                        }
+                                    },
+                                    x: {
+                                        grid: {
+                                            display: false
+                                        }
+                                    }
                                 }
                             }
                         }

@@ -6,6 +6,8 @@ from django.core.exceptions import ValidationError
 from django.db.models import Sum
 from .models import Scheme, State, SchemeData
 import json
+from django.db.models import Sum, Count
+from django.shortcuts import render
 
 @require_http_methods(["GET"])
 def scheme_list(request):
@@ -142,4 +144,80 @@ def add_data(request):
         return JsonResponse(
             {'error': 'Failed to add data', 'details': str(e)},
             status=500
+        )
+    
+@require_http_methods(["GET"])
+def map_view(request):
+    """Render the interactive map template"""
+    return render(request, 'map.html')
+
+@require_http_methods(["GET"])
+def state_geo_data(request):
+    """API endpoint for geographic visualization data"""
+    try:
+        # Indian state coordinates (approximate)
+        state_coords = {
+            'AP': (17.6868, 83.2185), 'AR': (27.1004, 93.6167), 'AS': (26.2006, 92.9376),
+            'BR': (25.0961, 85.3131), 'CT': (21.2787, 81.8661), 'GA': (15.2993, 74.1240),
+            'GJ': (22.2587, 71.1924), 'HR': (29.0588, 76.0856), 'HP': (31.1048, 77.1734),
+            'JH': (23.6102, 85.2799), 'KA': (15.3173, 75.7139), 'KL': (10.8505, 76.2711),
+            'MP': (22.9734, 78.6569), 'MH': (19.7515, 75.7139), 'MN': (24.6637, 93.9063),
+            'ML': (25.4670, 91.3662), 'MZ': (23.1645, 92.9376), 'NL': (25.7999, 93.9511),
+            'OR': (20.9517, 85.0985), 'PB': (31.1471, 75.3412), 'RJ': (27.0238, 74.2179),
+            'SK': (27.3333, 88.6167), 'TN': (11.1271, 78.6569), 'TG': (18.1124, 79.0193),
+            'TR': (23.9408, 91.9882), 'UP': (26.8467, 80.9462), 'UT': (30.0668, 79.0193),
+            'WB': (22.9868, 87.8550)
+        }
+
+        # Get all states with their data
+        states = State.objects.annotate(
+           total_beneficiaries=Sum('scheme_data__beneficiaries'),  
+           schemes_count=Count('scheme_data__scheme', distinct=True) 
+        )
+
+        # Build GeoJSON response
+        features = []
+        for state in states:
+            if state.code in state_coords:
+                lat, lon = state_coords[state.code]
+                features.append({
+                    "type": "Feature",
+                    "properties": {
+                        "name": state.name,
+                        "code": state.code,
+                        "beneficiaries": state.total_beneficiaries or 0,
+                        "schemes_count": state.schemes_count or 0
+                    },
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [lon, lat]
+                    }
+                })
+
+        return JsonResponse({
+            "type": "FeatureCollection",
+            "features": features
+        }, safe=False)
+    
+    except Exception as e:
+        return JsonResponse(
+            {'error': 'Failed to generate geographic data', 'details': str(e)},
+            status=500
+        )
+
+@require_http_methods(["GET"])
+def state_boundaries(request):
+    """Optional: API for detailed state boundaries (GeoJSON)"""
+    try:
+        # This would return actual GeoJSON boundaries if you have them
+        # For now returning empty - you can add real boundaries later
+        return JsonResponse({
+            "type": "FeatureCollection",
+            "features": []
+        }, safe=False)
+    
+    except Exception as e:
+        return JsonResponse(
+            {'error': 'Boundary data not available', 'details': str(e)},
+            status=501  # Not Implemented
         )
