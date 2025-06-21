@@ -6,18 +6,57 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Modern centered styling */
+        /* Dynamic Background Styles */
         body {
             font-family: 'Poppins', sans-serif;
             margin: 0;
             padding: 0;
             min-height: 100vh;
-            background: linear-gradient(135deg, #b1beee 0%, #c8d2fb 100%);
+            background: linear-gradient(-45deg, #3a0ca3, #4361ee, #4cc9f0, #7209b7);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
 
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Dynamic Heading Styles */
+        h1 {
+            color: white;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0 0 0.5rem 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        h1 i {
+            color: white;
+            font-size: 1.8rem;
+            animation: pulse 2s infinite, float 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* Rest of your original styles remain unchanged */
         .main-container {
             width: 100%;
             max-width: 1200px;
@@ -33,32 +72,8 @@
             width: 100%;
         }
 
-        h1 {
-            color: #3a0ca3;
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin: 0 0 0.5rem 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 15px;
-            position: relative;
-        }
-
-        h1 i {
-            color: #4361ee;
-            font-size: 1.8rem;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
-
         .subtitle {
-            color: #6c757d;
+            color: rgba(255,255,255,0.9);
             font-size: 1.1rem;
             font-weight: 400;
             max-width: 600px;
@@ -71,7 +86,7 @@
             display: block;
             width: 80px;
             height: 3px;
-            background: linear-gradient(to right, #4361ee, #3a0ca3);
+            background: white;
             margin: 1rem auto 0;
             border-radius: 3px;
         }
@@ -85,19 +100,20 @@
         }
 
         .card {
-            background: white;
+            background: rgba(255,255,255,0.9);
             border-radius: 12px;
             width: 100%;
             max-width: 800px;
             padding: 2rem;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             text-align: center;
+            backdrop-filter: blur(5px);
         }
 
         .card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
         }
 
         .card h2 {
@@ -142,6 +158,50 @@
             position: relative;
         }
 
+        .map-button {
+            display: inline-block;
+            padding: 12px 24px;
+            background: rgba(255,255,255,0.9);
+            color: #3a0ca3;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 500;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .map-button:hover {
+            background: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+        .admin-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 24px;
+            background: rgba(255,255,255,0.9);
+            color: #d90429;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 500;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .admin-button:hover {
+            background: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+
+
         @media (max-width: 768px) {
             h1 {
                 font-size: 2rem;
@@ -183,16 +243,18 @@
             </div>
         </div>
         <div style="text-align: center; margin: 30px 0;">
-    <a href="/map/" style="display: inline-block; padding: 12px 24px; 
-                          background: linear-gradient(135deg, #4361ee, #3a0ca3); 
-                          color: white; border-radius: 30px; text-decoration: none; 
-                          font-weight: 500; box-shadow: 0 4px 15px rgba(67, 97, 238, 0.3);
-                          transition: all 0.3s ease;">
-        <i class="fas fa-map-marked-alt"></i> View Geographic Distribution
-    </a>
-</div>
-    </div>
+            <a href="/map/" class="map-button">
+                <i class="fas fa-map-marked-alt"></i> View Geographic Distribution
+            </a>
+        </div>
 
+    </div>
+    
+     <a href="/admin/" class="admin-button">
+        <i class="fas fa-lock"></i> Enter Data (Admin Panel)
+    </a>
+
+    <!-- Your original JavaScript remains completely unchanged -->
     <script>
         // Global chart references
         let allSchemesChart = null;
